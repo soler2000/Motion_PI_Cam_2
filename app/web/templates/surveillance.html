@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% set active='surveillance' %}
+{% block body %}
+<h3>Surveillance (Live Preview)</h3>
+<div class="video-wrap">
+  <video id="surv" autoplay controls playsinline></video>
+  <canvas class="overlay" id="ov"></canvas>
+</div>
+<div style="margin-top:10px">
+  <button class="btn" onclick="record('start')">Manual Record</button>
+  <button class="btn alt" onclick="record('stop')">Stop Record</button>
+</div>
+<script type="module">
+  import {drawOverlay} from "/static/app.js";
+  const v=document.getElementById("surv");
+  v.src="http://" + location.hostname + ":8888/cam/index.m3u8"; v.play();
+  const c=document.getElementById("ov");
+  const socket=io({transports:["websocket"]}); socket.on("stats",(s)=>drawOverlay(c,s));
+</script>
+{% endblock %}
