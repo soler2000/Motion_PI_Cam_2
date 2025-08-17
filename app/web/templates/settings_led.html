@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% set active='settings' %}
+{% block body %}
+<h3>Settings – LED</h3>
+<form id="led" onsubmit="event.preventDefault(); saveForm('led','/api/settings/led')">
+  <div class="grid">
+    <div class="card">
+      <label>Master enabled</label>
+      <select name="master_enabled">
+        <option value="1" {{'selected' if s.master_enabled}}>On</option>
+        <option value="0" {{'' if s.master_enabled else 'selected'}}>Off</option>
+      </select>
+      <label>Brightness (0–255)</label><input name="brightness" value="{{ s.brightness }}">
+      <label>White color (hex)</label><input name="color_white" value="{{ s.color_white }}">
+      <label>Red color (hex)</label><input name="color_red" value="{{ s.color_red }}">
+    </div>
+    <div class="card">
+      <label>Lux threshold (reversing)</label><input name="lux_rev_on" value="{{ s.lux_rev_on }}">
+      <label>Lux threshold (surveillance)</label><input name="lux_surv_on" value="{{ s.lux_surv_on }}">
+      <label>Animation profile</label><input name="anim_profile" value="{{ s.anim_profile }}">
+    </div>
+  </div>
+  <button class="btn">Save</button>
+</form>
+{% endblock %}
