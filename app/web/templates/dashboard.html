@@ -1,0 +1,46 @@
+{% extends "base.html" %}{% set active='dashboard' %}
+{% block body %}
+<div class="grid">
+  <div class="card">
+    <h3>Status</h3>
+    <div class="kv"><span>Mode</span><span class="badge">{{ mode }}</span></div>
+    <div class="kv"><span>Distance</span><span id="stat-distance">--</span></div>
+    <div class="kv"><span>LED</span><span id="stat-led">--</span></div>
+    <div class="kv"><span>Wi-Fi RSSI</span><span id="stat-wifi">--</span></div>
+    <div class="kv"><span>CPU Temp</span><span id="stat-cpu-temp">--</span></div>
+    <div class="kv"><span>CPU Load</span><span id="stat-cpu-load">--</span></div>
+    <div class="kv"><span>Battery</span><span id="stat-batt-v">--</span></div>
+    <div class="kv"><span></span><span id="stat-batt-pct">--</span></div>
+    <div style="margin-top:10px">
+      <button class="btn" onclick="setMode('{{ 'surveillance' if mode=='reverse' else 'reverse' }}')">
+        Switch to {{ 'surveillance' if mode=='reverse' else 'reversing' }}
+      </button>
+      <button class="btn alt" onclick="record('start')">Manual Record</button>
+      <button class="btn alt" onclick="record('stop')">Stop Record</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Live Preview</h3>
+    <div class="video-wrap">
+      <video id="live" autoplay playsinline muted></video>
+      <canvas class="overlay" id="ov"></canvas>
+    </div>
+    <small class="hint">In reversing mode, this uses WebRTC; in surveillance, HLS preview.</small>
+  </div>
+</div>
+<script type="module">
+  import {drawOverlay} from "/static/app.js";
+  import {playWhep} from "/static/webrtc.js";
+  const canvas = document.getElementById("ov");
+  const video = document.getElementById("live");
+  {% if mode == 'reverse' %}
+    playWhep(video, "/whep/cam");
+  {% else %}
+    // iOS Safari plays HLS natively
+    video.src = "http://" + location.hostname + ":8888/cam/index.m3u8";
+    video.play();
+  {% endif %}
+  const socket = io({ transports:["websocket"]});
+  socket.on("stats", (s)=> drawOverlay(canvas, s));
+</script>
+{% endblock %}
