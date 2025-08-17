@@ -1,0 +1,48 @@
+@startuml
+title Motion_PI_Cam_2 – System Component Diagram (RPi Zero 2 W, Bookworm)
+
+actor "User (iPhone/iPad)" as User
+
+node "Raspberry Pi Zero 2 W" as Pi {
+  frame "Applications" {
+    [Flask Web App\n(WS:8000, Socket.IO)] as Flask
+    [MediaMTX\n(WebRTC/HLS, RTSP:8554, HLS:8888)] as MTX
+    [Video Pipeline\n(rpicam-vid, ffmpeg)] as VPipe
+    [Motion Service\n(OpenCV)] as Motion
+    [Recorder\n(HLS writer, pre-roll)] as Rec
+    [LED Controller\n(rpi_ws281x)] as LED
+    [Overlay Bus] as OBus
+    [Settings/State\n(SQLite)] as DB
+  }
+
+  frame "Sensors & Peripherals" {
+    [VL53L1X ToF @0x29] as ToF
+    [UPS HAT (C) INA219 @0x43] as UPS
+    [WS2812 Ring (GPIO18/Pin12)] as Ring
+    [CSI Camera] as Cam
+    [NetworkManager (AP fallback)] as NM
+  }
+}
+
+User -down-> MTX : WebRTC (Mode 1)\nWHEP
+User -down-> MTX : HLS (Mode 2)\n.m3u8
+User -down-> Flask : HTTP(S)\nDashboard/Settings/Gallery\nSocket.IO stats
+
+Cam --> VPipe : H.264 (rpicam-vid)
+VPipe --> MTX : RTSP publish (copy or transpose+re-encode)
+Flask --> DB : read/write settings
+Flask --> OBus : publish stats (Socket.IO)
+ToF --> Flask : distance (I²C)
+UPS --> Flask : V/I/P/SoC (I²C)
+Flask --> LED : set mode/brightness
+Motion --> Rec : triggers (sensitivity)
+Rec --> DB : events (paths, timestamps)
+Rec --> MTX : reads RTSP for HLS segments
+NM .. Flask : scan/connect/AP config
+
+note right of VPipe
+Rotation 0/180 => stream-copy
+Rotation 90/270 => transpose (ffmpeg) +
+h264_v4l2m2m re-encode
+end note
+@enduml
