@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% set active='settings' %}
+{% block body %}
+<h3>Settings – System</h3>
+<form id="sys" onsubmit="event.preventDefault(); saveForm('sys','/api/settings/system')">
+  <div class="grid">
+    <div class="card">
+      <label>Shutdown voltage (V)</label><input name="shutdown_voltage" value="{{ s.shutdown_voltage }}">
+      <label>Timezone</label><input name="tz" value="{{ s.tz }}">
+      <label>Log level</label><input name="log_level" value="{{ s.log_level }}">
+    </div>
+  </div>
+  <button class="btn">Save</button>
+</form>
+{% endblock %}
