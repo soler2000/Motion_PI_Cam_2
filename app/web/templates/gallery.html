@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% set active='gallery' %}
+{% block body %}
+<h3>Media Gallery</h3>
+<div class="card">
+  <form id="filter" onsubmit="event.preventDefault(); load()">
+    <label>From</label><input type="date" name="from"/>
+    <label>To</label><input type="date" name="to"/>
+    <button class="btn" onclick="load()">Refresh</button>
+    <button class="btn alt" onclick="cleanup()">Cleanup Old</button>
+  </form>
+</div>
+<div id="events" class="grid"></div>
+<script>
+async function load(){
+  const qs = new URLSearchParams(new FormData(document.getElementById('filter'))).toString();
+  const r = await fetch('/api/events?'+qs); const evs = await r.json();
+  const wrap = document.getElementById('events'); wrap.innerHTML='';
+  evs.forEach(e=>{
+    const d = document.createElement('div'); d.className='card';
+    d.innerHTML = `
+      <div><strong>${e.id}</strong> – ${e.ts_start} → ${e.ts_end||''}</div>
+      <video controls playsinline src="/media/${encodeURIComponent(e.path)}/index.m3u8" style="width:100%;margin-top:8px"></video>
+      <div style="margin-top:8px"><a class="btn alt" href="/media/${encodeURIComponent(e.path)}/index.m3u8">Open .m3u8</a></div>`;
+    wrap.appendChild(d);
+  });
+}
+async function cleanup(){ await fetch('/api/cleanup',{method:'POST'}); alert('Cleanup done'); load(); }
+load();
+</script>
+{% endblock %}
