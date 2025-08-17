@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% set active='reverse' %}
+{% block body %}
+<h3>Reversing Camera</h3>
+<div class="video-wrap">
+  <video id="rev" autoplay playsinline muted></video>
+  <canvas class="overlay" id="ov"></canvas>
+</div>
+<script type="module">
+  import {drawOverlay} from "/static/app.js";
+  import {playWhep} from "/static/webrtc.js";
+  const v = document.getElementById("rev");
+  const c = document.getElementById("ov");
+  playWhep(v, "/whep/cam");
+  const socket = io({ transports:["websocket"] });
+  socket.on("stats", (s)=> drawOverlay(c, s));
+</script>
+{% endblock %}
