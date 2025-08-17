@@ -1,0 +1,26 @@
+@startuml
+title Motion_PI_Cam_2 – Key Sequences
+
+== Reversing (Mode 1) ==
+User -> Flask: GET /reverse
+Flask -> MTX: Provide WHEP endpoint URL
+User -> MTX: POST SDP Offer (WHEP)
+MTX -> User: 200 + SDP Answer
+User <- MTX: WebRTC video
+Flask -> User: Socket.IO stats (2s)\n(distance, battery, CPU, Wi-Fi)
+Flask -> LED: mode=reverse_warn (0.1..10Hz White<->Red)
+ToF -> Flask: distance (I²C)
+UPS -> Flask: voltage/current/power/%
+
+== Surveillance (Mode 2) ==
+User -> Flask: Toggle mode=surveillance
+Flask -> VPipe: restart w/ rotation profile
+VPipe -> MTX: RTSP publish
+Flask -> User: /surveillance page (HLS URL)
+User -> MTX: GET /cam/index.m3u8
+MTX -> User: HLS segments
+Motion -> Flask/Rec: trigger(score)
+Rec -> MTX: read RTSP, write HLS segments
+Rec -> DB: insert event, end on timeout
+LED -> Ring: white illumination during recording (optional)
+@enduml
