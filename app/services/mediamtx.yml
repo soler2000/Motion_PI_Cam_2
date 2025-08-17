@@ -1,0 +1,13 @@
+logLevel: info
+rtspAddress: :8554
+hls: yes
+hlsAddress: :8888
+webrtc: yes
+webrtcAddresses:
+  - :8889
+api: yes
+
+paths:
+  cam:
+    source: publisher
+    record: false
