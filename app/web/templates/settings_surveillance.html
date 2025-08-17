@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% set active='settings' %}
+{% block body %}
+<h3>Settings – Surveillance</h3>
+<form id="surv" onsubmit="event.preventDefault(); saveForm('surv','/api/settings/surveillance')">
+  <div class="grid">
+    <div class="card">
+      <label>Pre-roll (s)</label><input name="preroll_sec" value="{{ s.preroll_sec }}">
+      <label>Clip length (s)</label><input name="clip_len_sec" value="{{ s.clip_len_sec }}">
+      <label>Sensitivity (0–100)</label><input name="sensitivity" value="{{ s.sensitivity }}">
+      <label>Retention (days)</label><input name="retention_days" value="{{ s.retention_days }}">
+    </div>
+    <div class="card">
+      <label>Resolution</label><input name="resolution" value="{{ s.resolution }}">
+      <label>Rotation</label><input name="rotation" value="{{ s.rotation }}">
+      <label>Transpose dir</label><input name="transpose_dir" value="{{ s.transpose_dir }}">
+      <label>Overlay</label><input name="overlay" value="{{ s.overlay }}">
+      <label>Overlay scale</label><input name="overlay_scale" value="{{ s.overlay_scale }}">
+    </div>
+    <div class="card">
+      <label>LED flash on motion (ms)</label><input name="flash_ms" value="{{ s.flash_ms }}">
+      <label>Light during record</label>
+      <select name="light_during_record">
+        <option value="1" {{'selected' if s.light_during_record}}>Yes</option>
+        <option value="0" {{'' if s.light_during_record else 'selected'}}>No</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn">Save</button>
+</form>
+{% endblock %}
