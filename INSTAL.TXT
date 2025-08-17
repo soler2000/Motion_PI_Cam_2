@@ -1,0 +1,63 @@
+Motion_PI_Cam_2 — Raspberry Pi Zero 2 W (Bookworm) — Install Guide
+==================================================================
+
+Overview
+--------
+Mode 1 – Reversing: ultra-low-latency WebRTC to iPhone/iPad (no recording), ToF distance overlay, LED ring warning 0.1–10 Hz.
+Mode 2 – Surveillance: motion detection, pre-roll, recording (HLS), gallery & timeline.
+
+Hardware
+--------
+• Pi Zero 2 W + CSI camera (V2/HQ).  • INA219 UPS HAT (C) @ I2C 0x43.  • VL53L1X @ I2C 0x29.
+• WS2812 16-LED ring on GPIO18 (pin 12). Use 5V and (ideally) a level shifter.
+
+Bookworm Notes
+--------------
+• Camera tools are rpicam-* (e.g., rpicam-vid).  • No i2c.target unit is required/used.
+
+Network (AP fallback)
+---------------------
+• Try known Wi-Fi for 30 s; if none, starts AP:
+  SSID: MotionPiCam-AP   Password: changeMe123
+• App URL: http://motion-pi-cam-2.local:8000 (or http://192.168.4.1:8000 in AP mode)
+
+Quick Install
+-------------
+1) Update prerequisites:
+   sudo apt-get update && sudo apt-get install -y git unzip
+
+2) Place this folder at /opt/motion_pi_cam_2:
+   sudo mkdir -p /opt/motion_pi_cam_2
+   sudo cp -a <this_folder>/* /opt/motion_pi_cam_2/
+   sudo chown -R pi:pi /opt/motion_pi_cam_2
+
+3) Run the installer (idempotent; safe to re-run):
+   sudo /opt/motion_pi_cam_2/bin/install_system.sh
+
+4) Reboot:
+   sudo reboot
+
+Pages
+-----
+/dashboard  – live stats, mode toggle, manual record
+/reverse    – fullscreen WebRTC low-latency + overlay
+/surveillance – live HLS preview + manual record
+/gallery    – timeline & playback (HLS), scrubbing, speeds
+/settings/* – reversing, surveillance, LED, Wi-Fi/AP, system
+
+Notes
+-----
+• LED warning ramps 0.1 Hz (far) → 10 Hz (near), alternating White↔Red.
+• Recording uses 5-min default segments + pre-roll. Retention policy in Settings.
+• Safe shutdown on low voltage (INA219), debounced.
+• If you change rotation to 0°/180°, stream-copy path reduces CPU/latency.
+• Use Safari on iOS for HLS playback; WebRTC works in Safari/Chrome.
+
+Uninstall
+---------
+sudo systemctl disable --now motion_pi_cam_2.service motion_pi_cam_2-ap.service mediamtx.service
+sudo rm -f /etc/systemd/system/{motion_pi_cam_2.service,motion_pi_cam_2-ap.service,mediamtx.service}
+sudo rm -f /etc/mediamtx.yml
+sudo rm -rf /opt/motion_pi_cam_2
+# Optional: remove media
+# sudo rm -rf /srv/motion_pi_cam_2
