@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Motion_PI_Cam_2</title>
+  <link rel="stylesheet" href="/static/app.css"/>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<header>
+  <nav>
+    <a href="/dashboard" class="{{ 'active' if active=='dashboard' else '' }}">Dashboard</a>
+    <a href="/reverse" class="{{ 'active' if active=='reverse' else '' }}">Reversing</a>
+    <a href="/surveillance" class="{{ 'active' if active=='surveillance' else '' }}">Surveillance</a>
+    <a href="/gallery" class="{{ 'active' if active=='gallery' else '' }}">Gallery</a>
+    <a href="/settings/reversing" class="{{ 'active' if active=='settings' else '' }}">Settings</a>
+  </nav>
+</header>
+<div class="container">
+  {% block body %}{% endblock %}
+</div>
+<script type="module" src="/static/app.js"></script>
+</body>
+</html>
