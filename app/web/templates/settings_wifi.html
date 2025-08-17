@@ -1,0 +1,37 @@
+{% extends "base.html" %}{% set active='settings' %}
+{% block body %}
+<h3>Settings – Wi-Fi / AP</h3>
+<div class="grid">
+  <div class="card">
+    <h4>Scan & Connect</h4>
+    <button class="btn" onclick="scan()">Scan</button>
+    <div id="nets" style="margin-top:10px"></div>
+  </div>
+  <div class="card">
+    <h4>AP Settings</h4>
+    <form id="ap" onsubmit="event.preventDefault(); saveForm('ap','/api/wifi/ap')">
+      <label>SSID</label><input name="ssid" value="{{ ap.ssid }}">
+      <label>Password</label><input name="psk" value="{{ ap.psk }}">
+      <label>Wi-Fi try (s)</label><input name="wifi_try" value="{{ ap.wifi_try }}">
+      <button class="btn">Save AP</button>
+    </form>
+  </div>
+</div>
+<script>
+async function scan(){
+  const r = await fetch('/api/wifi/scan'); const j = await r.json();
+  const box = document.getElementById('nets'); box.innerHTML='';
+  j.forEach(n=>{
+    const d = document.createElement('div'); d.className='kv';
+    d.innerHTML = `<span>${n.ssid} (${n.signal} dBm)</span>
+      <span><button class="btn" onclick="connect('${n.ssid}')">Save&Connect</button></span>`;
+    box.appendChild(d);
+  });
+}
+async function connect(ssid){
+  const psk = prompt(`Password for ${ssid} (WPA-PSK):`)||'';
+  await fetch('/api/wifi/connect',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ssid,psk})});
+  alert('Saved. Will attempt connection.');
+}
+</script>
+{% endblock %}
