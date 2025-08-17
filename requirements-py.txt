@@ -1,0 +1,10 @@
+Flask==3.0.3
+Flask-SocketIO==5.3.6
+eventlet==0.36.1
+Jinja2==3.1.4
+psutil==6.0.0
+rpi-ws281x==5.0.0
+adafruit-circuitpython-vl53l1x==1.2.9
+adafruit-circuitpython-ina219==5.3.4
+SQLAlchemy==2.0.32
+simple-websocket==1.0.0
