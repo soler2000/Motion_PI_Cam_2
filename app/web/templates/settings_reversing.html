@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% set active='settings' %}
+{% block body %}
+<h3>Settings – Reversing</h3>
+<form id="rev" onsubmit="event.preventDefault(); saveForm('rev','/api/settings/reversing')">
+  <div class="grid">
+    <div class="card">
+      <label>Min distance (m)</label><input name="min_distance_m" value="{{ s.min_distance_m }}">
+      <label>Max distance (m)</label><input name="max_distance_m" value="{{ s.max_distance_m }}">
+      <label>LED f_min (Hz)</label><input name="f_min_hz" value="{{ s.f_min_hz }}">
+      <label>LED f_max (Hz)</label><input name="f_max_hz" value="{{ s.f_max_hz }}">
+    </div>
+    <div class="card">
+      <label>Resolution (e.g. 1280x720)</label><input name="resolution" value="{{ s.resolution }}">
+      <label>FPS</label><input name="fps" value="{{ s.fps }}">
+      <label>Rotation (0/90/180/270)</label><input name="rotation" value="{{ s.rotation }}">
+      <label>Transpose dir (1 cw / 2 ccw)</label><input name="transpose_dir" value="{{ s.transpose_dir }}">
+    </div>
+    <div class="card">
+      <label>Overlay position</label><select name="overlay_pos">
+        <option {{'selected' if s.overlay_pos=='bottom-right'}}>bottom-right</option>
+        <option {{'selected' if s.overlay_pos=='top-right'}}>top-right</option>
+        <option {{'selected' if s.overlay_pos=='bottom-left'}}>bottom-left</option>
+        <option {{'selected' if s.overlay_pos=='top-left'}}>top-left</option>
+      </select>
+      <label>Overlay scale</label><input name="overlay_scale" value="{{ s.overlay_scale }}">
+    </div>
+  </div>
+  <button class="btn">Save</button>
+</form>
+{% endblock %}
