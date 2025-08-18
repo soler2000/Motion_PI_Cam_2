@@ -46,19 +46,26 @@ RestartSec=2
 [Install]
 WantedBy=multi-user.target
 EOF
+
 # Media storage
 sudo mkdir -p /srv/motion_pi_cam_2/{media,thumbs,tmp,logs}
 sudo chown -R pi:pi /srv/motion_pi_cam_2
 
-# DB init
-sqlite3 /srv/motion_pi_cam_2/config.db < /opt/motion_pi_cam_2/app/migrations/001_init.sql
-for f in /opt/motion_pi_cam_2/app/migrations/00*_*.sql; do sqlite3 /srv/motion_pi_cam_2/config.db < "$f"; done
+# DB init (idempotent)
+DB=/srv/motion_pi_cam_2/config.db
+if [ ! -f "$DB" ]; then
+  sqlite3 "$DB" < /opt/motion_pi_cam_2/app/migrations/001_init.sql
+  for f in /opt/motion_pi_cam_2/app/migrations/00*_*.sql; do sqlite3 "$DB" < "$f"; done
+fi
 
 # Services
 sudo cp /opt/motion_pi_cam_2/app/services/motion_pi_cam_2.service /etc/systemd/system/
 sudo cp /opt/motion_pi_cam_2/app/services/mediamtx.yml /etc/mediamtx.yml
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx.service motion_pi_cam_2.service
+sudo sed -i 's/^dtparam=audio=.*/dtparam=audio=off/' /boot/firmware/config.txt
+grep -q '^dtparam=audio=' /boot/firmware/config.txt || echo 'dtparam=audio=off' | sudo tee -a /boot/firmware/config.txt
+
 
 # AP fallback (NetworkManager-based)
 sudo bash -c 'cat > /etc/systemd/system/motion_pi_cam_2-ap.service <<EOF
