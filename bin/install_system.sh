@@ -22,13 +22,29 @@ python3 -m venv /opt/motion_pi_cam_2/venv
 /opt/motion_pi_cam_2/venv/bin/pip install --upgrade pip wheel
 /opt/motion_pi_cam_2/venv/bin/pip install -r /opt/motion_pi_cam_2/requirements-py.txt
 
-# MediaMTX
-MM_URL=$(curl -s https://api.github.com/repos/bluenviron/mediamtx/releases/latest | \
-         jq -r '.assets[] | select(.name|test("linux_armv6.tar.gz$")) | .browser_download_url')
-sudo mkdir -p /usr/local/mediamtx && cd /usr/local/mediamtx
-sudo curl -L "$MM_URL" | sudo tar xz
-sudo ln -sf /usr/local/mediamtx/mediamtx /usr/local/bin/mediamtx
+# MediaMTX (ARMv7 for Zero 2 W) - idempotent
+if ! command -v mediamtx >/dev/null 2>&1; then
+  TMP=$(mktemp -d)
+  curl -fsSL https://github.com/bluenviron/mediamtx/releases/latest/download/mediamtx_linux_armv7.tar.gz -o "$TMP/mtx.tar.gz"
+  tar -xzf "$TMP/mtx.tar.gz" -C "$TMP" mediamtx
+  sudo install -m 755 "$TMP/mediamtx" /usr/local/bin/mediamtx
+  rm -rf "$TMP"
+fi
+sudo install -m 644 /opt/motion_pi_cam_2/app/services/mediamtx.yml /etc/mediamtx.yml
 
+# MediaMTX unit (idempotent)
+sudo tee /etc/systemd/system/mediamtx.service >/dev/null <<'EOF'
+[Unit]
+Description=MediaMTX (WebRTC/HLS broker)
+After=network-online.target
+Wants=network-online.target
+[Service]
+ExecStart=/usr/local/bin/mediamtx /etc/mediamtx.yml
+Restart=on-failure
+RestartSec=2
+[Install]
+WantedBy=multi-user.target
+EOF
 # Media storage
 sudo mkdir -p /srv/motion_pi_cam_2/{media,thumbs,tmp,logs}
 sudo chown -R pi:pi /srv/motion_pi_cam_2
