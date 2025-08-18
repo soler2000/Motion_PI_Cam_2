@@ -1,7 +1,7 @@
 import board, busio, adafruit_ina219, time, math
 class UpsMonitor:
     def __init__(self, addr=0x43, busnum=1):
-        self.i2c = busio.I2C(getattr(board, f"SCL{busnum-1}"), getattr(board, f"SDA{busnum-1}"))
+        self.i2c = busio.I2C(getattr(board.SCL), getattr(board.SDA))
         self.ina = adafruit_ina219.INA219(self.i2c, addr)
         self._soc = 75.0
         self._last = time.time()
