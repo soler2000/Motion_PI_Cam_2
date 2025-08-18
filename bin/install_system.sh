@@ -80,6 +80,27 @@ WantedBy=multi-user.target
 EOF'
 sudo systemctl enable motion_pi_cam_2-ap.service
 
+# --- Step 7: environment hardening (idempotent) ------------------------------
+
+# 7.1 Ensure 'pi' has access to I2C / GPIO / Video devices
+if id -nG pi | grep -vqE '\b(i2c|gpio|video)\b'; then
+  sudo usermod -aG i2c,gpio,video pi || true
+fi
+
+# 7.2 Ensure Avahi (mDNS) is installed and enabled so host resolves as *.local
+if ! systemctl is-enabled --quiet avahi-daemon 2>/dev/null; then
+  sudo apt-get update
+  sudo apt-get install -y avahi-daemon
+  sudo systemctl enable avahi-daemon
+  sudo systemctl start avahi-daemon
+fi
+
+# 7.3 Normalize shell scripts (fix CRLF) and mark executable
+sudo sed -i 's/\r$//' /opt/motion_pi_cam_2/bin/*.sh 2>/dev/null || true
+sudo chmod +x /opt/motion_pi_cam_2/bin/*.sh 2>/dev/null || true
+# ---------------------------------------------------------------------------
+
+
 # Start services now
 sudo systemctl daemon-reload
 sudo systemctl enable mediamtx.service motion_pi_cam_2.service motion_pi_cam_2-ap.service
