@@ -54,7 +54,7 @@ sudo chown -R pi:pi /srv/motion_pi_cam_2
 # DB init (idempotent)
 DB=/srv/motion_pi_cam_2/config.db
 if [ ! -f "$DB" ]; then
-  sqlite3 "$DB" < /opt/motion_pi_cam_2/app/migrations/001_init.sql
+  sqlite3 "$DB" < /opt/motion_pi_cam_2/app/migrations/001_init_idempotent.sql
   for f in /opt/motion_pi_cam_2/app/migrations/00*_*.sql; do sqlite3 "$DB" < "$f"; done
 fi
 
