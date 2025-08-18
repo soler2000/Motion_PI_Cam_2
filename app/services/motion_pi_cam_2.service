@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
+User=root
 WorkingDirectory=/opt/motion_pi_cam_2/app/python
 EnvironmentFile=/opt/motion_pi_cam_2/app/services/motion_pi_cam_2.env
 ExecStart=/opt/motion_pi_cam_2/venv/bin/python -m main
