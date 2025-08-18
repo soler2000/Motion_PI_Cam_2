@@ -81,5 +81,7 @@ EOF'
 sudo systemctl enable motion_pi_cam_2-ap.service
 
 # Start services now
-sudo systemctl start mediamtx.service motion_pi_cam_2.service
-echo "Install complete."
+sudo systemctl daemon-reload
+sudo systemctl enable mediamtx.service motion_pi_cam_2.service motion_pi_cam_2-ap.service
+sudo systemctl restart mediamtx.service motion_pi_cam_2.service
+echo "Install complete. Reboot recommended."
