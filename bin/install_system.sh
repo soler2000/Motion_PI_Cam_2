@@ -17,10 +17,11 @@ sudo raspi-config nonint do_i2c 0 || true
 sudo raspi-config nonint do_camera 0 || true
 sudo sed -i '/^dtparam=i2c_arm/s/.*/dtparam=i2c_arm=on/' /boot/firmware/config.txt || true
 
-# Python venv
-python3 -m venv /opt/motion_pi_cam_2/venv
-/opt/motion_pi_cam_2/venv/bin/pip install --upgrade pip wheel
-/opt/motion_pi_cam_2/venv/bin/pip install -r /opt/motion_pi_cam_2/requirements-py.txt
+# Python venv (share system packages to use apt's OpenCV/Numpy/etc.)
+rm -rf /opt/motion_pi_cam_2/venv
+python3 -m venv --system-site-packages /opt/motion_pi_cam_2/venv
+/opt/motion_pi_cam_2/venv/bin/pip install --upgrade pip wheel setuptools
+/opt/motion_pi_cam_2/venv/bin/pip install --no-cache-dir -r /opt/motion_pi_cam_2/requirements-py.txt
 
 # MediaMTX (ARMv7 for Zero 2 W) - idempotent
 if ! command -v mediamtx >/dev/null 2>&1; then
