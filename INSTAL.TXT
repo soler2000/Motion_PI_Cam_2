@@ -26,10 +26,17 @@ Quick Install
 1) Update prerequisites:
    sudo apt-get update && sudo apt-get install -y git unzip
 
-2) Place this folder at /opt/motion_pi_cam_2:
-   sudo mkdir -p /opt/motion_pi_cam_2
-   sudo cp -a <this_folder>/* /opt/motion_pi_cam_2/
+2) Clone the repo from GitHub
+   git clone https://github.com/soler2000/Motion_PI_Cam_2.git
+
+   # Move into place
+   sudo mv Motion_PI_Cam_2 /opt/motion_pi_cam_2
    sudo chown -R pi:pi /opt/motion_pi_cam_2
+
+// 2) Place this folder at /opt/motion_pi_cam_2:
+//   sudo mkdir -p /opt/motion_pi_cam_2
+//   sudo cp -a <this_folder>/* /opt/motion_pi_cam_2/
+//   sudo chown -R pi:pi /opt/motion_pi_cam_2
 
 3) Run the installer (idempotent; safe to re-run):
    sudo /opt/motion_pi_cam_2/bin/install_system.sh
