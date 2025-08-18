@@ -16,6 +16,15 @@
     <a href="/gallery" class="{{ 'active' if active=='gallery' else '' }}">Gallery</a>
     <a href="/settings/reversing" class="{{ 'active' if active=='settings' else '' }}">Settings</a>
   </nav>
+    <div style="margin-top:8px">
+    <nav>
+      <a href="/settings/reversing">Settings: Reversing</a>
+      <a href="/settings/surveillance">Settings: Surveillance</a>
+      <a href="/settings/led">Settings: LED</a>
+      <a href="/settings/wifi">Settings: Wi‑Fi</a>
+      <a href="/settings/system">Settings: System</a>
+    </nav>
+  </div>
 </header>
 <div class="container">
   {% block body %}{% endblock %}
