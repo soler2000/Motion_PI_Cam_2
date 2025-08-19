@@ -207,3 +207,24 @@ def api_wifi_ap():
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=8000)
+
+from flask import jsonify
+@app.route("/api/sensors")
+def api_sensors():
+    out={}
+    try:
+        d = tof.distance_m() if "tof" in globals() and tof else None
+        out["distance_m"] = round(d,1) if isinstance(d,(int,float)) else None
+    except Exception:
+        out["distance_m"] = None
+    try:
+        snap = ups.snapshot() if "ups" in globals() and ups else {}
+        out.update({
+            "voltage": snap.get("voltage"),
+            "current": snap.get("current"),
+            "power": snap.get("power"),
+            "battery_percent": snap.get("percent"),
+        })
+    except Exception:
+        out.update({"voltage":None,"current":None,"power":None,"battery_percent":None})
+    return jsonify(out),200

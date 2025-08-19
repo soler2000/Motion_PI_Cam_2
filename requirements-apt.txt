@@ -1,9 +1,7 @@
 python3-opencv
-python3-picamera2
-ffmpeg
+python3-numpy
+python3-rpi.gpio
+python3-libgpiod
+i2c-tools
+avahi-daemon
 network-manager
-+python3-numpy
-+python3-rpi.gpio
-+python3-libgpiod
-+i2c-tools
-+avahi-daemon

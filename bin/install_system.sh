@@ -1,172 +1,61 @@
 #!/usr/bin/env bash
 set -euo pipefail
+./bin/preflight.sh
 
-@@
--#!/usr/bin/env bash
--set -e
-+#!/usr/bin/env bash
-+set -euo pipefail
-+
-+APP_DIR="/opt/motion_pi_cam_2"
-+DATA_DIR="/srv/motion_pi_cam_2"
-+VENV="$APP_DIR/venv"
-+SERVICE="/etc/systemd/system/motion_pi_cam_2.service"
-+
-+echo "[1/6] APT prerequisites…"
-+sudo apt-get update
-+sudo apt-get install -y git python3-venv python3-dev build-essential sqlite3 jq \
-+  rpicam-apps ffmpeg network-manager \
-+  $(grep -vE '^\s*#' requirements-apt.txt | tr '\n' ' ')
-+
-+echo "[2/6] Directories & permissions…"
-+sudo mkdir -p "$APP_DIR" "$DATA_DIR"/{logs,media}
-+sudo chown -R pi:pi "$APP_DIR" "$DATA_DIR"
-+
-+echo "[3/6] Python venv…"
-+python3 -m venv --system-site-packages "$VENV"
-+sudo chown -R pi:pi "$VENV"
-+"$VENV/bin/pip" install -U pip wheel setuptools
-+"$VENV/bin/pip" install -r requirements-py.txt
-+
-+echo "[4/6] DB schema (idempotent)…"
-+sqlite3 "$DATA_DIR/config.db" < schema.sql
-+
-+echo "[5/6] systemd unit…"
-+sudo tee "$SERVICE" >/dev/null <<'UNIT'
-+[Unit]
-+Description=Motion_PI_Cam_2 Flask + workers
-+After=network-online.target
-+Wants=network-online.target
-+
-+[Service]
-+User=root
-+WorkingDirectory=/opt/motion_pi_cam_2/app/python
-+Environment=PYTHONUNBUFFERED=1
-+Environment=PYTHONNOUSERSITE=1
-+# start stable on fresh installs; you can remove this after confirming LEDs
-+Environment=LED_DISABLE=1
-+ExecStart=/opt/motion_pi_cam_2/venv/bin/python -m main
-+Restart=always
-+RestartSec=2
-+
-+[Install]
-+WantedBy=multi-user.target
-+UNIT
-+
-+sudo systemctl daemon-reload
-+sudo systemctl enable motion_pi_cam_2.service
-+
-+echo "[6/6] Enable I2C and free PWM for LEDs…"
-+sudo sed -i '/^dtparam=i2c_arm=/d' /boot/firmware/config.txt
-+echo 'dtparam=i2c_arm=on' | sudo tee -a /boot/firmware/config.txt >/dev/null
-+sudo sed -i '/^dtparam=audio=/d' /boot/firmware/config.txt
-+echo 'dtparam=audio=off' | sudo tee -a /boot/firmware/config.txt >/dev/null
-+
-+echo "Install complete. Reboot recommended."
+APP_DIR="/opt/motion_pi_cam_2"
+DATA_DIR="/srv/motion_pi_cam_2"
+VENV="$APP_DIR/venv"
+SERVICE="/etc/systemd/system/motion_pi_cam_2.service"
 
-
-# Clean older installs (picam names) to avoid overwrite warnings
-sudo systemctl disable --now picam.service picam-ap.service 2>/dev/null || true
-sudo rm -f /etc/systemd/system/picam.service /etc/systemd/system/picam-ap.service
-sudo rm -rf /opt/picam
-sudo mv /srv/picam /srv/motion_pi_cam_2 2>/dev/null || true
-
-# Core apt packages
+echo "[1/6] APT prerequisites…"
 sudo apt-get update
-sudo apt-get install -y python3-venv python3-pip sqlite3 git curl jq \
-  $(cat /opt/motion_pi_cam_2/requirements-apt.txt)
+sudo apt-get install -y git python3-venv python3-dev build-essential sqlite3 jq \
+  rpicam-apps ffmpeg network-manager \
+  $(grep -vE '^\s*#' requirements-apt.txt | tr '\n' ' ')
 
-# Enable camera + I2C
-sudo raspi-config nonint do_i2c 0 || true
-sudo raspi-config nonint do_camera 0 || true
-sudo sed -i '/^dtparam=i2c_arm/s/.*/dtparam=i2c_arm=on/' /boot/firmware/config.txt || true
+echo "[2/6] Directories…"
+sudo rm -rf "$APP_DIR" "$DATA_DIR" 2>/dev/null || true
+sudo mkdir -p "$APP_DIR" "$DATA_DIR"/{logs,media}
+sudo cp -a . "$APP_DIR"
+sudo chown -R pi:pi "$APP_DIR" "$DATA_DIR"
 
-# Python venv (share system packages to use apt's OpenCV/Numpy/etc.)
-rm -rf /opt/motion_pi_cam_2/venv
-python3 -m venv --system-site-packages /opt/motion_pi_cam_2/venv
-/opt/motion_pi_cam_2/venv/bin/pip install --upgrade pip wheel setuptools
-/opt/motion_pi_cam_2/venv/bin/pip install --no-cache-dir -r /opt/motion_pi_cam_2/requirements-py.txt
+echo "[3/6] Python venv…"
+python3 -m venv --system-site-packages "$VENV"
+sudo chown -R pi:pi "$VENV"
+"$VENV/bin/pip" install -U pip wheel setuptools
+"$VENV/bin/pip" install -r "$APP_DIR/requirements-py.txt"
 
-# MediaMTX (ARMv7 for Zero 2 W) - idempotent
-if ! command -v mediamtx >/dev/null 2>&1; then
-  TMP=$(mktemp -d)
-  curl -fsSL https://github.com/bluenviron/mediamtx/releases/latest/download/mediamtx_linux_armv7.tar.gz -o "$TMP/mtx.tar.gz"
-  tar -xzf "$TMP/mtx.tar.gz" -C "$TMP" mediamtx
-  sudo install -m 755 "$TMP/mediamtx" /usr/local/bin/mediamtx
-  rm -rf "$TMP"
-fi
-sudo install -m 644 /opt/motion_pi_cam_2/app/services/mediamtx.yml /etc/mediamtx.yml
+echo "[4/6] DB schema…"
+sqlite3 "$DATA_DIR/config.db" < "$APP_DIR/schema.sql"
 
-# MediaMTX unit (idempotent)
-sudo tee /etc/systemd/system/mediamtx.service >/dev/null <<'EOF'
+echo "[5/6] systemd unit…"
+sudo tee "$SERVICE" >/dev/null <<'UNIT'
 [Unit]
-Description=MediaMTX (WebRTC/HLS broker)
+Description=Motion_PI_Cam_2 Flask + workers
 After=network-online.target
 Wants=network-online.target
+
 [Service]
-ExecStart=/usr/local/bin/mediamtx /etc/mediamtx.yml
-Restart=on-failure
+User=root
+WorkingDirectory=/opt/motion_pi_cam_2/app/python
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONNOUSERSITE=1
+Environment=LED_DISABLE=1
+ExecStart=/opt/motion_pi_cam_2/venv/bin/python -m main
+Restart=always
 RestartSec=2
+
 [Install]
 WantedBy=multi-user.target
-EOF
+UNIT
 
-# Media storage
-sudo mkdir -p /srv/motion_pi_cam_2/{media,thumbs,tmp,logs}
-sudo chown -R pi:pi /srv/motion_pi_cam_2
-
-# DB init (idempotent)
-DB=/srv/motion_pi_cam_2/config.db
-if [ ! -f "$DB" ]; then
-  sqlite3 "$DB" < /opt/motion_pi_cam_2/app/migrations/001_init_idempotent.sql
-  # removed for sinlge sql file for f in /opt/motion_pi_cam_2/app/migrations/00*_*.sql; do sqlite3 "$DB" < "$f"; done
-fi
-
-# Services
-sudo cp /opt/motion_pi_cam_2/app/services/motion_pi_cam_2.service /etc/systemd/system/
-sudo cp /opt/motion_pi_cam_2/app/services/mediamtx.yml /etc/mediamtx.yml
 sudo systemctl daemon-reload
-sudo systemctl enable mediamtx.service motion_pi_cam_2.service
-sudo sed -i 's/^dtparam=audio=.*/dtparam=audio=off/' /boot/firmware/config.txt
-grep -q '^dtparam=audio=' /boot/firmware/config.txt || echo 'dtparam=audio=off' | sudo tee -a /boot/firmware/config.txt
+sudo systemctl enable motion_pi_cam_2.service
 
+echo "[6/6] Enable I2C & free PWM…"
+sudo sed -i '/^dtparam=i2c_arm=/d' /boot/firmware/config.txt
+echo 'dtparam=i2c_arm=on' | sudo tee -a /boot/firmware/config.txt >/dev/null
+sudo sed -i '/^dtparam=audio=/d' /boot/firmware/config.txt
+echo 'dtparam=audio=off' | sudo tee -a /boot/firmware/config.txt >/dev/null
 
-# AP fallback (NetworkManager-based)
-sudo bash -c 'cat > /etc/systemd/system/motion_pi_cam_2-ap.service <<EOF
-[Unit]
-Description=Motion_PI_Cam_2 Wi-Fi AP fallback
-After=NetworkManager.service
-[Service]
-Type=oneshot
-ExecStart=/opt/motion_pi_cam_2/bin/wifi_ap_fallback.sh
-[Install]
-WantedBy=multi-user.target
-EOF'
-sudo systemctl enable motion_pi_cam_2-ap.service
-
-# --- Step 7: environment hardening (idempotent) ------------------------------
-
-# 7.1 Ensure 'pi' has access to I2C / GPIO / Video devices
-if id -nG pi | grep -vqE '\b(i2c|gpio|video)\b'; then
-  sudo usermod -aG i2c,gpio,video pi || true
-fi
-
-# 7.2 Ensure Avahi (mDNS) is installed and enabled so host resolves as *.local
-if ! systemctl is-enabled --quiet avahi-daemon 2>/dev/null; then
-  sudo apt-get update
-  sudo apt-get install -y avahi-daemon
-  sudo systemctl enable avahi-daemon
-  sudo systemctl start avahi-daemon
-fi
-
-# 7.3 Normalize shell scripts (fix CRLF) and mark executable
-sudo sed -i 's/\r$//' /opt/motion_pi_cam_2/bin/*.sh 2>/dev/null || true
-sudo chmod +x /opt/motion_pi_cam_2/bin/*.sh 2>/dev/null || true
-# ---------------------------------------------------------------------------
-
-
-# Start services now
-sudo systemctl daemon-reload
-sudo systemctl enable mediamtx.service motion_pi_cam_2.service motion_pi_cam_2-ap.service
-sudo systemctl restart mediamtx.service motion_pi_cam_2.service
 echo "Install complete. Reboot recommended."
