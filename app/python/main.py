@@ -68,8 +68,8 @@ def _stats_tick():
 
 def _safety_shutdown_tick():
     v = ups.snapshot()["voltage"]
-    if v <= S.system["shutdown_voltage"]:
-        os.system("systemctl poweroff")
+    #if v <= S.system["shutdown_voltage"]:
+    #    os.system("systemctl poweroff")
 
 def _recorder_tick():
     if S.get_mode()=="surveillance":
