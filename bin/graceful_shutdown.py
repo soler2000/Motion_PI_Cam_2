@@ -12,6 +12,6 @@ while True:
     else:
         LOW_COUNT = 0
     if LOW_COUNT >= 5:  # ~10s debounce
-        subprocess.call(["systemctl","poweroff"])
+        #!/Removed shutdown call while sensors configured  subprocess.call(["systemctl","poweroff"])
         break
     time.sleep(2)
